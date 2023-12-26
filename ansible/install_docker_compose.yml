@@ -1,0 +1,29 @@
+---
+- name: Install Docker Compose
+  hosts: all
+  become: yes
+
+  vars:
+    dockercomposeversion: "1.24.0"
+
+  tasks:
+    - name: Check if Docker Compose is already installed
+      stat:
+        path: /usr/local/bin/docker-compose
+      register: docker_compose_check
+
+    - name: Exit playbook if condition is met
+      debug:
+        msg: "Docker Compose already installed, exiting"
+      when: docker_compose_check.stat.exists | default(false)
+      # You can remove the 'when' condition if you want the message to always be displayed
+
+    - name: Exit playbook if condition is met
+      meta: end_play
+      when: docker_compose_check.stat.exists| default(false)
+
+    - name: Download and install Docker Compose
+      get_url: 
+        url: https://github.com/docker/compose/releases/download/{{ dockercomposeversion }}/docker-compose-{{ ansible_system }}-{{ ansible_userspace_architecture }}
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'

@@ -1,0 +1,30 @@
+---
+- name: Install required packages
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install make
+      apt:
+        name: make
+        state: present
+
+    - name: Install jq
+      apt:
+        name: jq
+        state: present
+
+    - name: Install net-tools
+      apt:
+        name: net-tools
+        state: present
+
+    - name: Install vim
+      apt:
+        name: vim
+        state: present
+
+    - name: Install sqlite3
+      apt:
+        name: sqlite3
+        state: present

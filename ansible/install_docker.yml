@@ -1,0 +1,73 @@
+---
+- name: Install Docker
+  hosts: all
+  become: true
+
+  vars:
+    dockerversion: "19.03.1"
+
+  tasks:
+    - name: Check if Docker is already installed
+      command: docker --version
+      register: docker_check
+      ignore_errors: true  # Ignore errors to prevent playbook failure if Docker is not installed
+
+    - name: Exit if Docker is already installed
+      debug:
+        msg: "Docker is already installed. Exiting."
+      when: "'Docker' in docker_check.stdout"
+
+    - name: Exit if Docker is already installed
+      meta: end_play
+      when: "'Docker' in docker_check.stdout"
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+
+    - name: Check Docker GPG key fingerprint
+      command: "apt-key fingerprint 0EBFCD88"
+      ignore_errors: true
+      register: fingerprint_check
+
+    - name: Exit if GPG key fingerprint is incorrect
+      fail:
+        msg: "Fingerprint error, exiting"
+      when: fingerprint_check.rc != 0
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+
+    - name: Update apt packages after adding repository
+      apt:
+        update_cache: yes
+
+    - name: Install Docker CLI
+      apt:
+        name: "docker-ce-cli=5:{{ dockerversion }}~3-0~ubuntu-bionic"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: "docker-ce=5:{{ dockerversion }}~3-0~ubuntu-bionic"
+        state: present
+
+    - name: Add user to the docker group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+
+    - name: Hold Docker version to prevent automatic updates
+      ansible.builtin.dpkg_selections:
+        name: docker-ce
+        selection: hold
+
+    - name: Display installation completion message
+      debug:
+        msg: "Installation complete"

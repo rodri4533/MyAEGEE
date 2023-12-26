@@ -1,0 +1,23 @@
+---
+- name: Conversion to Unix format
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Install dos2unix
+    ansible.builtin.apt:
+      name:
+        - dos2unix
+
+  - name: Find .sh files
+    ansible.builtin.find:
+      paths:
+        - /vagrant
+        - scripts-vagrant_provision
+      patterns:
+        - "*.sh"
+    register: sh_files
+
+  - name: Convert to Unix format 
+    ansible.builtin.command: dos2unix "{{ item.path }}"
+    with_items: "{{ sh_files.files }}"
